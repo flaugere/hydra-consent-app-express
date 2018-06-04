@@ -4,6 +4,7 @@ const router = express.Router()
 const OAuth2 = require('simple-oauth2')
 const qs = require('querystring')
 const process = require('process')
+const users = require('../mock/users')
 
 const scope = 'hydra.consent'
 const oauth2 = OAuth2.create({
@@ -51,18 +52,6 @@ const catcher = (w) => (error) => {
   return Promise.reject(error)
 }
 
-// This is a mock object for the user. Usually, you would fetch this from, for example, mysql, or mongodb, or somewhere else.
-// The data is arbitrary, but will require a unique user id.
-const user = {
-  email: 'dan@acme.com',
-  password: 'secret',
-
-  email_verified: true,
-  user_id: 'user:12345:dandean',
-  name: 'Dan Dean',
-  nickname: 'Danny',
-}
-
 const resolver = (resolve, reject) => (error, data, response) => {
   if (error) {
     return reject(error)
@@ -75,7 +64,7 @@ const resolver = (resolve, reject) => (error, data, response) => {
 
 // This get's executed when we want to tell hydra that the user is authenticated and that he authorized the application
 const resolveConsent = (r, w, consent, grantScopes = []) => {
-  const { email, email_verified, user_id: subject, name, nickname } = user
+  const { email, email_verified, user_id: subject, name, nickname } = r.session.user
   const idTokenExtra = {}
 
   // Sometimes the body parser doesn't return an array, so let's fix that.
@@ -156,17 +145,19 @@ router.post('/consent', (r, w) => {
 })
 
 router.get('/login', (r, w) => {
-  w.render('login', { error: r.query.error, user, consent: r.query.consent })
+  w.render('login', { error: r.query.error, consent: r.query.consent })
 })
 
 router.post('/login', (r, w) => {
   const form = r.body
-  if (form.email !== user.email || form.password !== user.password) {
-    w.redirect('/login?error=Wrong+credentials+provided&consent=' + form.consent)
-  }
-
-  r.session.isAuthenticated = true
-  w.redirect('/consent?consent=' + r.body.consent)
+  users.forEach((user) => {
+    if (form.email !== user.email || form.password !== user.password) {
+      w.redirect('/login?error=Wrong+credentials+provided&consent=' + form.consent)
+    }
+    r.session.user = user;
+    r.session.isAuthenticated = true
+    w.redirect('/consent?consent=' + r.body.consent)    
+  });
 })
 
 router.get('/', (
