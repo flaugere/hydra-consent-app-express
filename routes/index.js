@@ -160,6 +160,11 @@ router.post('/login', (r, w) => {
   });
 })
 
+router.post('/logout', (r, w) => {
+  r.session.destroy()
+  w.redirect(r.query.redirect)
+})
+
 router.get('/', (
   r,
   w
