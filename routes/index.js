@@ -151,18 +151,18 @@ router.get('/login', (r, w) => {
 router.post('/login', (r, w) => {
   const form = r.body
   users.forEach((user) => {
-    if (form.email !== user.email || form.password !== user.password) {
-      w.redirect('/login?error=Wrong+credentials+provided&consent=' + form.consent)
+    if (form.email == user.email && form.password == user.password) {
+      r.session.user = user;
+      r.session.isAuthenticated = true
+      w.redirect('/consent?consent=' + r.body.consent)  
     }
-    r.session.user = user;
-    r.session.isAuthenticated = true
-    w.redirect('/consent?consent=' + r.body.consent)    
   });
+  w.redirect('/login?error=Wrong+credentials+provided&consent=' + form.consent)
 })
 
-router.post('/logout', (r, w) => {
+router.get('/logout', (r, w) => {
   r.session.destroy()
-  w.redirect(r.query.redirect)
+  w.redirect(r.query.post_logout_redirect_uri)
 })
 
 router.get('/', (
