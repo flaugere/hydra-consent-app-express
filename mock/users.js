@@ -1,6 +1,7 @@
 const users = [
     {
         email: 'dan@acme.com',
+        login: 'dan@acme.com',
         password: 'secret',
       
         email_verified: true,
