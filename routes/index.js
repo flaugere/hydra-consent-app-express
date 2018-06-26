@@ -64,7 +64,7 @@ const resolver = (resolve, reject) => (error, data, response) => {
 
 // This get's executed when we want to tell hydra that the user is authenticated and that he authorized the application
 const resolveConsent = (r, w, consent, grantScopes = []) => {
-  const { email, email_verified, user_id: subject, name, nickname } = r.session.user
+  const { email, email_verified, user_id: subject, name, nickname, login } = r.session.user
   const idTokenExtra = {}
 
   // Sometimes the body parser doesn't return an array, so let's fix that.
@@ -76,6 +76,7 @@ const resolveConsent = (r, w, consent, grantScopes = []) => {
   if (grantScopes.indexOf('profile') >= 0) {
     idTokenExtra.name = name
     idTokenExtra.nickname = nickname
+    idTokenExtra.login = login
   }
 
   // This is to fulfill the openid 'email' scope which returns the user's email address. (optional)
